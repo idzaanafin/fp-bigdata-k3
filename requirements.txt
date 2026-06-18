@@ -1,0 +1,10 @@
+# --- Core Data Processing & Big Data ---
+pyspark==3.3.0
+pandas==2.2.1
+numpy==1.26.4
+
+# --- Ingestion Layer (Kafka) ---
+kafka-python==2.0.2
+
+# --- Serving Layer (Flask Monolith) ---
+Flask==3.0.2

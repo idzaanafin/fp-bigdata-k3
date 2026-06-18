@@ -1,0 +1,94 @@
+services:
+  # ==========================================
+  # 1. HADOOP HDFS (Storage Layer)
+  # ==========================================    
+  namenode:
+    image: apache/hadoop:3
+    # user: root
+    platform: linux/amd64
+    hostname: namenode
+    container_name: hadoop-namenode
+    ports:
+      - "9870:9870"   # HDFS Web UI
+      - "8020:8020"   # HDFS RPC Port
+    environment:
+      ENSURE_NAMENODE_DIR: /tmp/hadoop-hadoop/dfs/name
+    env_file:
+      - ./hadoop.env
+    # volumes:
+      # - ./storage/hdfs_namenode:/tmp/hadoop-hadoop/dfs/name
+      # - hadoop_namenode:/tmp/hadoop-hadoop/dfs/name
+    command: ["hdfs", "namenode"]
+
+  datanode:
+    image: apache/hadoop:3
+    user: root
+    platform: linux/amd64
+    hostname: datanode
+    container_name: hadoop-datanode
+    depends_on:
+      namenode:
+        condition: service_started
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - ./storage/hdfs_datanode:/tmp/hadoop-hadoop/dfs/data
+      # - hadoop_datanode:/tmp/hadoop-hadoop/dfs/data
+    command: ["hdfs", "datanode"]
+
+  # ==========================================
+  # 2. APACHE KAFKA (Ingestion - KRaft Mode)
+  # ==========================================
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: kafka-broker
+    ports:
+      - "9092:9092"   # Pintu internal sesama container Docker
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_LOG_RETENTION_HOURS: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - ./storage/kafka_data:/var/lib/kafka/data
+
+  # ==========================================
+  # 3. APPLICATION RUNTIME (Flask + PySpark Context)
+  # ==========================================
+  final-project-big-data:
+    build:
+      context: .
+      dockerfile: src/app/Dockerfile
+    container_name: final-project-big-data
+    ports:
+      - "5000:5000"   # Akses Web UI Dashboard dari browser laptop
+    environment:
+      - ENV_DOCKER=true
+      - PYSPARK_PYTHON=python3
+    volumes:
+      # Bind mounts: Biar kalau kamu edit kode di laptop, isi di dalam Docker otomatis berubah live
+      - .:/app
+    depends_on:
+      kafka:
+        condition: service_started
+      namenode:
+        condition: service_started
+
+networks:
+  default:
+    name: lakehouse-network
+
+# volumes:
+  # hadoop_namenode:
+  # hadoop_datanode:

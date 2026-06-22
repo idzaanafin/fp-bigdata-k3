@@ -1,24 +1,34 @@
-# Kita kunci OS-nya pakai slim-bookworm (Debian 12) agar versinya stabil dan tidak berubah sendiri
+# ============================================================
+# Dockerfile — Runtime container (Flask + PySpark + Hadoop Client)
+# ============================================================
 FROM python:3.9-slim-bookworm
 
-# Install Java OpenJDK 17 & dependensi dasar Linux (Pasti tersedia di Debian Bookworm)
+# Copy Hadoop installation from apache/hadoop:3 image
+# (image ini sudah di-pull oleh docker-compose untuk namenode & datanode)
+COPY --from=apache/hadoop:3 /opt/hadoop /opt/hadoop
+
+# Install Java OpenJDK 17 & tools
 RUN apt-get update && apt-get install -y --fix-missing \
     openjdk-17-jre-headless \
     procps \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME diarahkan ke lokasi Java 17
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV HADOOP_HOME=/opt/hadoop
+ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+ENV HADOOP_USER_NAME=hadoop
+ENV PATH=$HADOOP_HOME/bin:$PATH
+ENV LD_LIBRARY_PATH=/opt/hadoop/lib/native:$LD_LIBRARY_PATH
 
 WORKDIR /app
 
-# Copy requirements dari root context ke container
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Port 5000 untuk Flask Web Dashboard
-EXPOSE 5000
+# Hadoop core-site.xml — point ke HDFS namenode
+COPY hadoop-conf/core-site.xml $HADOOP_HOME/etc/hadoop/core-site.xml
 
-# Default command saat container naik
+EXPOSE 5000
 CMD ["python", "src/app/app.py"]

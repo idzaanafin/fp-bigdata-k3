@@ -1,0 +1,25 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+
+# === Runtime Data (Kafka, HDFS) ===
+storage/
+
+# === Outputs ===
+output/
+*.parquet
+
+# === Spark ===
+.spark-*/
+metastore_db/
+derby.log
+
+# === IDE ===
+.vscode/
+.idea/
+
+# === OS ===
+.DS_Store
+Thumbs.db

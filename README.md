@@ -4,10 +4,10 @@
 | Nama | NRP |
 | --- | --- |
 | Ahmad Idza Anafin | 5027241017 |
-| Aditya Reza Daffansyah | 50272410 |
-| Reza Aziz Simatupang | 50272410 |
-| Ahmad Rafi Fadhillah Dwiputra | 50272410 |
-| Muhammad Rafi' Adly | 50272410 |
+| Aditya Reza Daffansyah | 5027241034 |
+| Reza Aziz Simatupang | 5027241051 |
+| Ahmad Rafi Fadhillah Dwiputra | 5027241068 |
+| Muhammad Rafi' Adly | 5027241082 |
 
 
 
@@ -18,25 +18,34 @@ docker-compose up -d --build
 docker-compose down
 ```
 
-### Ingestion (Raw Data to Kafka)
+> Nama container aplikasi: `final-project-big-data`. Semua job Spark berjalan
+> dalam mode `local[*]` di dalam container ini (bukan cluster Spark terpisah).
+
+### 1. Ingestion — Kafka topics + Producer + Consumer ke Bronze (HDFS)
 ```
-docker exec -it (namacontainer) python3 src/ingestion/ingestion.py
+docker exec -it final-project-big-data python3 src/ingestion/setup_topics.py
+docker exec -it final-project-big-data python3 src/ingestion/producer.py
+docker exec -it final-project-big-data python3 src/ingestion/consumer_to_hdfs.py
 ```
 
-### Bronze Layer (Kafka to HDFS)
+### 2. Bronze → Silver (PySpark ETL)
 ```
-docker exec -it (namacontainer) python3 src/pipeline/bronze_layer.py
-
-```
-
-### Silver Layer (HDFS to Spark)
-```
-docker exec -it (namacontainer) python3 src/pipeline/silver_layer.py
+docker exec -it final-project-big-data python3 src/processing/bronze_to_silver.py
 ```
 
-### Gold Layer (Spark to JSON)
+### 3. Silver → Gold (Aggregation + NCI/NRS Scoring)
 ```
-docker exec -it (namacontainer) python3 src/pipeline/gold_layer.py
+docker exec -it final-project-big-data python3 src/processing/silver_to_gold.py
+```
+
+### 4. ML Analysis (K-Means + Isolation Forest) → Gold final + export lokal
+```
+docker exec -it final-project-big-data python3 src/analysis/ml_analysis.py
+```
+
+### 5. GIS Visualization (butuh shapefile di data/shapefiles/)
+```
+docker exec -it final-project-big-data python3 src/visualization/gis_map.py
 ```
 
 ### Remove All Data
@@ -45,6 +54,7 @@ docker-compose down -v
 docker volume rm (namavolume)
 ```
 
+---
 
 # Sistem Audit Ketimpangan Distribusi Fasilitas Kesehatan Balita DKI Jakarta Berbasis Arsitektur Data Lakehouse
 
@@ -61,7 +71,7 @@ Sistem ini menyelesaikan *gap* tersebut dengan mengintegrasikan data lintas sekt
 
 ### Justifikasi Kerangka 5V Big Data
 * **Volume:** Mengakumulasikan data granular seluruh balita berisiko gizi, log kunjungan posyandu, dan koordinat faskes di seluruh kelurahan/kecamatan DKI Jakarta secara kumulatif.
-* **Velocity:** Mengotomatiskan penyerapan data berkala dari API portal pemerintah daerah untuk memperbarui *Nutrition Risk Score* secara dinamis tanpa jeda analisis manual.
+* **Velocity:** Pipeline ingestion berbasis Apache Kafka memproses data sebagai aliran (streaming) sehingga *Nutrition Risk Score* dapat diperbarui secara berkala (batch refresh) tanpa analisis manual. Saat ini sumber adalah CSV resmi yang dialirkan via Kafka; endpoint API Satudata didesain *pluggable* untuk pemutakhiran otomatis ke depan.
 * **Variety:** Menangani karakteristik data yang beragam (*semi-structured* dan *structured*) seperti file tabular kasus gizi BPS, data spasial lokasi faskes, hingga metadata posyandu.
 * **Veracity:** Mengatasi ketidakpastian data (*data noise*) seperti format penulisan nama wilayah yang inkonsisten antar instansi dan menangani record faskes yang kosong.
 * **Value:** Memberikan rekomendasi wilayah prioritas intervensi secara presisi bagi Pemerintah Daerah untuk pemerataan tenaga medis dan posyandu.
@@ -72,7 +82,21 @@ Sistem ini menyelesaikan *gap* tersebut dengan mengintegrasikan data lintas sekt
 
 Sistem ini menggabungkan komponen teknologi modern untuk membentuk pipeline data aktif yang sinergis:
 
-[ Raw Data ] -> [ Apache Kafka ] -> [ Apache Hadoop HDFS ] -> (Medallion Architecture) -> [ PySpark (MLlib K-Means) ] -> [ Local Gold JSON ] -> [ Flask Dashboard UI ]
+```
+                         INGESTION              STORAGE (HDFS Data Lakehouse)            PROCESSING / ANALYTICS              SERVING
+  ┌─────────────┐      ┌───────────┐      ┌──────────────────────────────────┐      ┌──────────────────────────┐      ┌──────────────────┐
+  │ Satudata /  │      │  Apache   │      │  BRONZE   →   SILVER   →   GOLD   │      │ PySpark ETL + MLlib      │      │ Gold JSON/Parquet│
+  │ BPS  (CSV/  │ ───► │  Kafka    │ ───► │ (raw     (cleaned/    (NCI/NRS    │ ───► │  • K-Means (Silhouette)  │ ───► │  (output/)       │
+  │ API*)       │      │ (4 topik) │      │  parquet) partisi)    +cluster)   │      │  • Isolation Forest      │      │   → Flask        │
+  └─────────────┘      └───────────┘      └──────────────────────────────────┘      │  • GeoPandas/Folium GIS  │      │     Dashboard    │
+                                                                                     └──────────────────────────┘      └──────────────────┘
+  * Producer saat ini membaca CSV fallback (batch) lewat Kafka; endpoint API didesain pluggable namun belum diaktifkan.
+```
+
+**Alur data end-to-end:** Raw (CSV via Kafka) → Bronze (Parquet mentah di HDFS) →
+Silver (dibersihkan & dipartisi `kabupaten_kota`) → Gold (rasio + NCI + NRS) →
+ML (cluster + anomaly → `gold/wilayah_final`) → ekspor lokal `output/wilayah_final.json`
+→ dikonsumsi GIS & Dashboard.
 
 
 
@@ -94,7 +118,38 @@ Sistem menerapkan alur pengolahan data bertingkat untuk menjamin kualitas data:
 1.  **Bronze Layer (Raw Data):** Mengumpulkan data mentah dari Satudata Jakarta (2025) dan BPS (2024) dalam format asli (JSON/CSV) ke dalam HDFS sebagai *single source of truth*.
 2.  **Silver Layer (Cleaned & Structured):** PySpark melakukan pembersihan data: standardisasi penulisan nama kabupaten/kota, penanganan data faskes yang kosong (*missing values*), dan transformasi tipe data. Data disimpan kembali dalam format **Parquet** yang dipartisi berdasarkan `kabupaten_kota`.
     * *Justifikasi Parquet & Partisi:* Format *columnar storage* ini mempercepat query pemfilteran wilayah tertentu melalui fitur *predicate pushdown* dan menghemat kapasitas penyimpanan HDFS.
-3.  **Gold Layer (Aggregated & Insights):** Menyimpan hasil kalkulasi indikator kuantitatif seperti rasio faskes per 10.000 balita dan *Nutrition Coverage Index* (NCI). Data akhir ini diekspor ke folder lokal `./storage/gold_output/` dalam format JSON ringkas untuk langsung dikonsumsi oleh Flask Dashboard.
+3.  **Gold Layer (Aggregated, Scored & Analysis-Ready):** Menyimpan indikator kuantitatif (rasio faskes/posyandu/nakes per 10.000, *Nutrition Coverage Index*, *Nutrition Risk Score*, `priority_rank`) di `hdfs://namenode:8020/data/gold/wilayah_risk_score/`. Setelah analisis ML, hasil akhir (+`cluster_label`, `is_anomaly`, `anomaly_score`) ditulis ke `gold/wilayah_final/` dan diekspor ke lokal `output/wilayah_final.parquet` & `output/wilayah_final.json` untuk dikonsumsi GIS dan Flask Dashboard.
+
+#### Kontrak Data — `output/wilayah_final.json`
+Array of record (1 baris per kabupaten/kota), dikonsumsi langsung oleh dashboard:
+
+| Field | Tipe | Keterangan |
+| :--- | :--- | :--- |
+| `kabupaten_kota` | string | Nama wilayah standar (UPPER) |
+| `populasi` | int | Populasi total wilayah |
+| `total_balita_gizi_buruk` | int | Jumlah balita bermasalah gizi (semua kategori) |
+| `total_stunting` | int | Jumlah balita stunting |
+| `total_gizi_buruk` | int | Breakdown: kategori gizi buruk |
+| `total_gizi_kurang` | int | Breakdown: kategori gizi kurang |
+| `total_underweight` | int | Breakdown: kategori underweight |
+| `jumlah_rs_umum` | int | Jumlah RS Umum |
+| `jumlah_rs_khusus` | int | Jumlah RS Khusus |
+| `jumlah_posyandu` | int | Jumlah Posyandu |
+| `total_nakes` | int | Total tenaga kesehatan |
+| `rasio_faskes_per_10k_balita` | float | RS umum+khusus per 10k balita gizi buruk |
+| `rasio_posyandu_per_10k_populasi` | float | Posyandu per 10k penduduk |
+| `rasio_nakes_per_10k_populasi` | float | Tenaga kesehatan per 10k penduduk |
+| `prevalensi_stunting_pct` | float | Stunting / populasi total × 100 (lihat catatan*) |
+| `nutrition_coverage_index` | float | NCI (0–1), makin tinggi makin baik cakupan |
+| `nutrition_risk_score` | float | NRS (0–1), makin tinggi makin berisiko |
+| `priority_rank` | int | Peringkat prioritas (1 = paling prioritas) |
+| `cluster_id` | int | ID cluster K-Means |
+| `cluster_label` | string | "Risiko Rendah/Sedang/Tinggi" |
+| `is_anomaly` | bool | Hasil Isolation Forest |
+| `anomaly_score` | float | Skor anomali (makin negatif makin anomali) |
+| `last_updated` | string | Timestamp ISO build Gold |
+
+> *Catatan kualitas data:* `prevalensi_stunting_pct` memakai **populasi total** wilayah sebagai penyebut (data populasi hanya tersedia per kabupaten/kota, bukan populasi balita). Karena itu nilainya bukan prevalensi balita sebenarnya, namun **tetap valid untuk pemeringkatan relatif antarwilayah** (transformasi monotonik).
 
 ---
 
@@ -110,3 +165,19 @@ Sistem menghitung rasio matematis ketersediaan faskes penunjang terhadap beban j
 * **Metode Validasi:** Menentukan jumlah kluster optimal ($K$) menggunakan *Elbow Method* dan dievaluasi secara statistik menggunakan **Silhouette Score**.
 * **Metrik Evaluasi:** Mengukur jarak kedekatan antar data dalam kluster menggunakan rumus *Within Set Sum of Squared Errors* (WSSE):
     $$WSSE = \sum_{i=1}^k \sum_{x \in C_i} ||x - \mu_i||^2$$
+* **Pelabelan dinamis:** label cluster ("Risiko Rendah/Sedang/Tinggi") ditetapkan otomatis dengan mengurutkan rata-rata NRS tiap cluster — bukan pemetaan manual — agar konsisten meski ID cluster berubah antar-run.
+
+### C. Isolation Forest — Anomaly Detection (scikit-learn)
+* **Deskripsi:** Mendeteksi wilayah dengan pola tidak wajar (mis. stunting tinggi *sekaligus* rasio faskes rendah) menggunakan **Isolation Forest** pada output Gold. scikit-learn dipakai karena data sudah teragregasi & kecil.
+* **Output terukur:** `is_anomaly` (boolean) dan `anomaly_score` (makin negatif = makin anomali) per wilayah.
+* **Evaluasi (tanpa ground-truth):** *domain validation* — memastikan wilayah anomali memang kombinasi gizi-buruk-tinggi + layanan-rendah; serta *robustness check* dengan `contamination ∈ {0.10, 0.15, 0.20}` untuk memastikan wilayah anomali konsisten.
+
+### D. GIS Spatial Analysis (GeoPandas + Folium)
+* Menggabungkan NRS/cluster/anomaly dengan batas wilayah DKI Jakarta menjadi peta choropleth (`output/peta_nrs.png`, `output/peta_cluster.png`) dan peta interaktif (`output/peta_interaktif.html`).
+* Memperkuat insight spasial ketimpangan distribusi faskes (mendukung deskriptor rubrik "clustering spasial").
+
+---
+
+## 5. Relevansi Smart City
+
+Sistem ini selaras dengan agenda **Smart City** Pemprov DKI Jakarta pada domain *Smart Society/Smart Governance*: pemerataan layanan kesehatan balita berbasis data. Output berupa *priority ranking* dan peta risiko per wilayah dapat langsung dipakai sebagai dasar **kebijakan kota** untuk realokasi tenaga medis, penambahan posyandu, dan intervensi gizi tertarget — sehingga berpotensi diadopsi nyata ke dalam ekosistem data terpadu (Satudata) Jakarta.

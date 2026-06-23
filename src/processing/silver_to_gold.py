@@ -143,6 +143,10 @@ def build_gold():
             ).otherwise(F.lit(None).cast(FloatType()))
         ) \
         .withColumn(
+            # CAVEAT: penyebut = populasi TOTAL wilayah (data balita per
+            # wilayah tidak tersedia). Jadi ini BUKAN prevalensi balita
+            # sebenarnya, tetapi tetap valid untuk pemeringkatan relatif
+            # antarwilayah (transformasi monotonik). Lihat README §3.
             "prevalensi_stunting_pct",
             F.when(
                 F.col("populasi") > 0,

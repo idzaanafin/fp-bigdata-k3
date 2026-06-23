@@ -8,7 +8,11 @@ __pycache__/
 storage/
 
 # === Outputs ===
-output/
+# Abaikan artefak besar/regenerable, TAPI commit kontrak data JSON
+# agar dashboard (bagian lain) bisa dikembangkan tanpa menjalankan pipeline.
+output/*
+!output/.gitkeep
+!output/wilayah_final.json
 *.parquet
 
 # === Spark ===

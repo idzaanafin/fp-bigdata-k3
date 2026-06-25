@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <title>NutriAudit DKI</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        font-family: Inter;
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: linear-gradient(180deg, #eff6ff, #ffffff);
+      }
+
+      .glass {
+        backdrop-filter: blur(20px);
+        background: rgba(255, 255, 255, 0.75);
+
+        border: 1px solid rgba(255, 255, 255, 0.6);
+      }
+
+      .card {
+        transition: 0.35s;
+      }
+
+      .card:hover {
+        transform: translateY(-6px);
+
+        box-shadow: 0 30px 60px rgba(30, 64, 175, 0.12);
+      }
+
+      .fade {
+        animation: fade 1s;
+      }
+
+      @keyframes fade {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .float {
+        animation: float 5s infinite;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(-10px);
+        }
+
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      .map-wrapper {
+        overflow: hidden;
+
+        border-radius: 32px;
+
+        background: white;
+
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.12);
+      }
+
+      iframe {
+        border: none;
+
+        background: transparent;
+      }
+
+      img {
+        transition: 0.4s;
+      }
+
+      img:hover {
+        transform: scale(1.03);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HERO -->
+
+    <section
+      class="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-800 to-blue-500 text-white"
+    >
+      <div
+        class="absolute inset-0 opacity-20"
+        style="
+          background: radial-gradient(circle, white 1px, transparent 1px);
+          background-size: 40px 40px;
+        "
+      ></div>
+
+      <div class="max-w-7xl mx-auto px-10 py-24 relative">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="text-blue-200 uppercase tracking-[0.3em] mb-4">
+              DATA LAKEHOUSE
+            </div>
+
+            <h1 class="text-6xl font-black leading-tight fade">
+              Sistem Audit Ketimpangan Distribusi Fasilitas Kesehatan Balita DKI
+              Jakarta
+            </h1>
+
+            <p class="mt-6 text-xl text-blue-100 max-w-3xl">
+              Nutrition Risk Score • Spatial Analytics • Audit Dashboard
+            </p>
+          </div>
+
+          <div class="glass rounded-3xl p-8 float">
+            <div class="text-sm">Last Update</div>
+
+            <div class="mt-2 text-3xl font-bold">2026</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-6 mt-14">
+          {% set items=[ ("Wilayah",summary.wilayah), ("Avg
+          Risk",summary.avg_risk), ("Posyandu",summary.posyandu),
+          ("Nakes",summary.nakes) ] %} {% for a,b in items %}
+
+          <div class="glass card rounded-3xl p-7">
+            <div class="text-blue-200">{{a}}</div>
+
+            <div class="text-5xl font-black mt-2">{{b}}</div>
+          </div>
+
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <div class="max-w-7xl mx-auto px-8 space-y-20 py-16">
+      <section>
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-4xl font-black text-blue-950">
+            Interactive Spatial Audit
+          </h2>
+
+          <div class="px-5 py-2 rounded-full bg-blue-100">
+            Live Visualization
+          </div>
+        </div>
+
+        <div class="map-wrapper">
+          <iframe
+            src="/output/peta_interaktif.html"
+            class="w-full h-[900px]"
+          ></iframe>
+        </div>
+      </section>
+
+      <section>
+        <div class="grid grid-cols-2 gap-8">
+          <div class="card bg-white rounded-[32px] p-5 shadow-xl">
+            <div class="font-bold text-xl mb-5">Nutrition Risk Heatmap</div>
+
+            <img src="/output/peta_nrs.png" class="rounded-2xl" />
+          </div>
+
+          <div class="card bg-white rounded-[32px] p-5 shadow-xl">
+            <div class="font-bold text-xl mb-5">Cluster Distribution</div>
+
+            <img src="/output/peta_cluster.png" class="rounded-2xl" />
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="mb-14">
+          <div class="uppercase tracking-[0.35em] text-blue-500">
+            AUDIT PRIORITY
+          </div>
+
+          <h2 class="text-5xl font-black mt-4">Wilayah Prioritas Intervensi</h2>
+        </div>
+
+        <div class="space-y-7">
+          {% for x in regions %}
+
+          <div
+            class="bg-white rounded-[34px] shadow-lg hover:shadow-2xl transition overflow-hidden"
+          >
+            <div class="grid grid-cols-12 items-center">
+              <div
+                class="col-span-1 h-full flex items-center justify-center text-white font-black text-3xl {% if x.priority_rank==1 %} bg-red-600 {% elif x.priority_rank<=3 %} bg-yellow-500 {% else %} bg-blue-700 {% endif %}"
+              >
+                {{x.priority_rank}}
+              </div>
+
+              <div class="col-span-4 px-8 py-8">
+                <div class="text-sm uppercase text-gray-400">Wilayah</div>
+
+                <div class="text-3xl font-black">{{x.kabupaten_kota}}</div>
+
+                <div
+                  class="mt-4 inline-flex gap-2 items-center px-4 py-2 rounded-full bg-blue-50"
+                >
+                  <i data-lucide="layers" class="w-4 h-4"></i>
+
+                  {{x.cluster_label}}
+                </div>
+              </div>
+
+              <div class="col-span-2">
+                <div class="text-gray-500">Risk Score</div>
+
+                <div class="text-5xl font-black">
+                  {{x.nutrition_risk_score}}
+                </div>
+              </div>
+
+              <div class="col-span-2">
+                <div class="text-gray-500">Coverage</div>
+
+                <div class="text-4xl font-bold text-blue-700">
+                  {{(x.nutrition_coverage_index*100)|round(0)}}%
+                </div>
+              </div>
+
+              <div class="col-span-2">
+                <div class="text-gray-500">Posyandu</div>
+
+                <div class="text-4xl font-bold">{{x.jumlah_posyandu}}</div>
+              </div>
+
+              <div class="col-span-1 flex justify-center">
+                {% if x.is_anomaly %}
+
+                <div
+                  class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center"
+                >
+                  <i
+                    data-lucide="triangle-alert"
+                    class="w-7 h-7 text-red-600"
+                  ></i>
+                </div>
+
+                {% else %}
+
+                <div
+                  class="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center"
+                >
+                  <i
+                    data-lucide="shield-check"
+                    class="w-7 h-7 text-green-600"
+                  ></i>
+                </div>
+
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          {% endfor %}
+        </div>
+      </section>
+
+      <section>
+        <div class="text-center mb-14">
+          <div class="uppercase tracking-[0.4em] text-blue-500">
+            AUDIT ENGINE
+          </div>
+
+          <h2 class="text-5xl font-black mt-4">Generated Strategic Insights</h2>
+        </div>
+
+        <div class="grid grid-cols-3 gap-8">
+          {% for i in insights %}
+
+          <div
+            class="bg-white rounded-[36px] shadow-xl hover:shadow-2xl hover:-translate-y-2 transition overflow-hidden"
+          >
+            <div
+              class="h-2 {% if loop.index==1 %} bg-red-500 {% elif loop.index==2 %} bg-blue-600 {% else %} bg-green-500 {% endif %}"
+            ></div>
+
+            <div class="p-10">
+              <div
+                class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center"
+              >
+                {% if loop.index==1 %}
+
+                <i data-lucide="scan-search" class="w-8 h-8 text-red-500"></i>
+
+                {% elif loop.index==2 %}
+
+                <i data-lucide="chart-column" class="w-8 h-8 text-blue-700"></i>
+
+                {% else %}
+
+                <i data-lucide="lightbulb" class="w-8 h-8 text-green-700"></i>
+
+                {% endif %}
+              </div>
+
+              <div class="mt-8 text-2xl font-black">{{i.title}}</div>
+
+              <div class="mt-5 leading-9 text-gray-600">{{i.body}}</div>
+
+              <div class="mt-10 flex items-center gap-2 text-sm text-gray-400">
+                <i data-lucide="brain" class="w-4 h-4"></i>
+
+                Generated Insight
+              </div>
+            </div>
+          </div>
+
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+    <script>
+        lucide.createIcons();
+    </script>
+  </body>
+</html>

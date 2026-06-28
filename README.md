@@ -289,4 +289,10 @@ Setelah melakukan langkah-langkah pada [Command Documentation](#command-document
 
 
 **Dokumentasi Dashboard:**
-![Dashboard](documentation/dashboard.mp4) 
+![Dashboard](documentation/dashboard.png)
+![Dashboard](documentation/dashboard1.png)
+![Dashboard](documentation/dashboard2.png)
+![Dashboard](documentation/dashboard3.png)
+![Dashboard](documentation/dashboard4.png)
+![Dashboard](documentation/dashboard5.png)
+![Dashboard](documentation/dashboard6.png)

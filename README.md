@@ -181,3 +181,108 @@ Sistem menghitung rasio matematis ketersediaan faskes penunjang terhadap beban j
 ## 5. Relevansi Smart City
 
 Sistem ini selaras dengan agenda **Smart City** Pemprov DKI Jakarta pada domain *Smart Society/Smart Governance*: pemerataan layanan kesehatan balita berbasis data. Output berupa *priority ranking* dan peta risiko per wilayah dapat langsung dipakai sebagai dasar **kebijakan kota** untuk realokasi tenaga medis, penambahan posyandu, dan intervensi gizi tertarget — sehingga berpotensi diadopsi nyata ke dalam ekosistem data terpadu (Satudata) Jakarta.
+
+---
+
+# Dokumentasi Step-by-Step
+
+## 1. Data ingestion
+Data berasal dari 4 sumber:
+- [Data Stunting Berdasarkan Wilayah (Satudata)](https://satudata.jakarta.go.id/open-data/detail?kategori=dataset&page_url=jumlah-anak-bawah-lima-tahun-balita-bermasalah-gizi-berdasarkan-wilayah&data_no=6)
+- [Jumlah Fasilitas Kesehatan (BPS)](https://jakarta.bps.go.id/id/statistics-table/3/YmlzemNGUkNVblZLVVhOblREWnZXbkEzWld0eVVUMDkjMw==/jumlah-rumah-sakit-umum--rumah-sakit-khusus--puskesmas--klinik-pratama--dan-posyandu-menurut-kabupaten-kota-di-provinsi-dki-jakarta--2019.html?year=2022)
+- [Jumlah Tenaga Kesehatan DKI Jakarta (Satudata)](https://satudata.jakarta.go.id/open-data/detail?kategori=dataset&page_url=data-jumlah-tenaga-kesehatan-menurut-kecamatan-provinsi-dki-jakarta&data_no=1)
+- [Populasi DKI Jakarta (BPS)](https://jakarta.bps.go.id/en/statistics-table/3/V1ZSbFRUY3lTbFpEYTNsVWNGcDZjek53YkhsNFFUMDkjMw==/penduduk--laju-pertumbuhan-penduduk--distribusi-persentase-penduduk--kepadatan-penduduk--rasio-jenis-kelamin-penduduk-menurut-kabupaten-kota-di-provinsi-dki-jakarta--2024.html?year=2024)
+
+Data tersebut dikumpulkan pada [data/fallback](data/fallback)
+![Ingest Data](documentation/ingest.png)
+
+## 2. Bronze Layer
+Setelah data ingestion, dataset kemudian disimpan ke HDFS (Hadoop Distributed File System) berupa data raw file .parquet dan siap untuk diproses ke layer berikutnya.
+**Tujuan:** Menyimpan data mentah persis seperti diterima dari sumber, tanpa transformasi apapun.
+![Bronze Layer](documentation/bronze.png)
+Berikut adalah data-data yang sudah tersimpan di HDFS.
+![Bronze Directory](documentation/data_bronze.png)
+
+## 3. Silver Layer
+Dalam layer ini, dilakukan data cleaning.
+**Tujuan:** Membersihkan, menstandarisasi, dan menormalkan data dari semua sumber agar siap digabungkan.
+
+**Transformasi yang dilakukan di Silver:**
+
+| Masalah | Solusi |
+|---|---|
+| Nama wilayah tidak konsisten ("JAKARTA PUSAT" vs "Jakarta Pusat" vs "Jak-Pus") | Standarisasi ke uppercase + mapping dictionary |
+| Granularitas berbeda (gizi & nakes per kecamatan, faskes & populasi per kabupaten/kota) | Agregasi gizi & nakes ke level kabupaten/kota dengan SUM/COUNT |
+| Periode data berbeda antar dataset | Tambah kolom `periode_label` yang distandarisasi, flag data dengan `data_vintage` |
+| Nilai null/missing | Impute dengan median per wilayah atau flag sebagai `NULL_FLAG=True` |
+| Duplikat record | Deduplicate berdasarkan composite key (wilayah + periode + kategori) |
+| Satuan populasi (ribuan jiwa) | Konversi ke jiwa absolut (`population_thousand × 1000`) |
+
+
+![Silver Layer](documentation/silver.png)
+Hasil data yang tersimpan pada silver layer adalah berikut.
+![Silver Directory](documentation/data_silver.png)
+
+## 4. Gold Layer
+**Tujuan:** Output final yang siap dikonsumsi oleh serving layer dan analisis ML.
+
+**Transformasi yang dilakukan di Gold:**
+
+1. **Penggabungan 4 tabel silver** berdasarkan kolom `kabupaten_kota` - `populasi_clean`, `gizi_agregat`, `faskes_clean`, dan `nakes_agregat`
+
+2. **Perhitungan Rasio Indikator:**
+   - `rasio_faskes_per_10k_balita` = (total_rs_umum + total_rs_khusus) / (total_balita_gizi_buruk / 10000)
+   - `rasio_posyandu_per_10k_populasi` = total_posyandu / (populasi / 10000)
+   - `rasio_nakes_per_10k_populasi` = total_nakes / (populasi / 10000)
+   - `prevalensi_stunting_pct` = (total_stunting / populasi) × 100
+   - `nutrition_coverage_index (NCI)` = rata-rata tertimbang dari rasio-rasio faskes dan nakes
+
+3. **Normalisasi:** 
+    - Setiap indikator dinormalisasi ke rentang [0, 1] menggunakan min-max normalisasi via Spark Window function (global across semua wilayah).
+
+4. **Nutrition Risk Score (NRS):**
+   ```
+   NRS = (w1 × norm_stunting) + (w2 × norm_inverse_faskes) + (w3 × norm_inverse_nakes)
+   ```
+   Di mana `norm_*` adalah min-max normalization (0–1) dan `w1=0.5, w2=0.3, w3=0.2` (dapat di-tune).
+   NRS range 0–1, semakin tinggi = semakin berisiko.
+
+Data yang tersimpan pada Gold Layer.
+![Gold Directory](documentation/data_gold.png)
+
+## 5. ML Analysis
+
+### 5.1 K-Means Clustering (PySpark MLlib)
+
+**Tujuan:** Mengelompokkan 6 kabupaten/kota DKI Jakarta ke dalam kategori risiko berdasarkan gabungan fitur gizi dan ketersediaan layanan.
+
+**Hasil K-Means Clustering** (kolom tambahan):
+   - `cluster_id` : integer (0, 1, 2)
+   - `cluster_label` : string ("Risiko Rendah", "Risiko Sedang", "Risiko Tinggi")
+
+![K-Means Clustering](documentation/analisis1.png)
+k=3 dipilih berdasarkan Elbow Method, karena WSSE turun drastis dari k=2 -> 3. **Pelabelan cluster** dilakukan secara dinamis berdasarkan rata-rata NRS tiap cluster (bukan pelabelan manual).
+
+
+**Hasil pemetaan cluster:**
+| Cluster | Label | NRS | Wilayah |
+| --- | --- | --- | --- |
+| Cluster 2 | Risiko Rendah | 0.13 – 0.17 | Jakarta Pusat, Jakarta Selatan |
+| Cluster 0 | Risiko Sedang | 0.47 – 0.64 | Jakarta Barat, Jakarta Utara, Jakarta Timur |
+| Cluster 1 | Risiko Tinggi | 0.9171 | Kepulauan Seribu |
+
+### 4.2 Isolation Forest - Anomaly Detection (scikit-learn)
+
+**Tujuan:** Mendeteksi wilayah yang memiliki pola tidak wajar — misalnya angka stunting sangat tinggi tapi rasio faskes juga sangat rendah (double anomali yang memerlukan intervensi segera).
+
+**Hasil Isolation Forest** (kolom tambahan):
+   - `is_anomaly` : boolean
+   - `anomaly_score` : float (semakin negatif = semakin anomali)
+
+![Isolation Forest](documentation/analisis2.png)
+![Hasil Akhir](documentation/analisis_akhir.png)
+
+Kepulauan Seribu konsisten terdeteksi sebagai anomali di semua nilai contamination, mengindikasikan profil risiko yang sangat berbeda dari lima wilayah Jakarta lainnya. Kemungkinan besar karena keterbatasan layanan akses kesehatan akibat kondisi wilayah geografis.
+
+## 6. Dashboard
+Setelah melakukan langkah-langkah pada [Command Documentation](#command-documentation) dashboard akan muncul pada localhost:5000

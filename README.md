@@ -285,4 +285,8 @@ k=3 dipilih berdasarkan Elbow Method, karena WSSE turun drastis dari k=2 -> 3. *
 Kepulauan Seribu konsisten terdeteksi sebagai anomali di semua nilai contamination, mengindikasikan profil risiko yang sangat berbeda dari lima wilayah Jakarta lainnya. Kemungkinan besar karena keterbatasan layanan akses kesehatan akibat kondisi wilayah geografis.
 
 ## 6. Dashboard
-Setelah melakukan langkah-langkah pada [Command Documentation](#command-documentation) dashboard akan muncul pada localhost:5000
+Setelah melakukan langkah-langkah pada [Command Documentation](#command-documentation) dashboard akan muncul pada localhost:5000.
+
+
+**Dokumentasi Dashboard:**
+![Dashboard](documentation/dashboard.mp4) 

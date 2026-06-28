@@ -1,342 +1,743 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriAudit DKI</title>
 
-    <title>NutriAudit DKI</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ===================================================
+       NutriAudit DKI — Design System
+       Palette: Government Intelligence × Data Journalism
+       =================================================== */
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    /* ── Tokens ── */
+    :root {
+      --ink:        #0A1628;
+      --ink-mid:    #1E3A5F;
+      --primary:    #1353A4;
+      --primary-lt: #2563EB;
+      --accent:     #E63946;
+      --accent-lt:  #FECDD3;
+      --gold:       #D4A017;
+      --surface:    #F0F5FC;
+      --panel:      #FFFFFF;
+      --border:     #D1DCF0;
+      --muted:      #64748B;
+      --muted-lt:   #94A3B8;
+      --green:      #059669;
+      --green-lt:   #D1FAE5;
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+      --r-sm:   12px;
+      --r-md:   20px;
+      --r-lg:   32px;
+      --r-xl:   44px;
 
-    <style>
-      * {
-        font-family: Inter;
-        scroll-behavior: smooth;
-      }
+      --shadow-card: 0 4px 24px rgba(10, 22, 40, 0.07), 0 1px 4px rgba(10, 22, 40, 0.05);
+      --shadow-lift: 0 20px 60px rgba(10, 22, 40, 0.13), 0 4px 12px rgba(10, 22, 40, 0.06);
+    }
 
-      body {
-        background: linear-gradient(180deg, #eff6ff, #ffffff);
-      }
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--surface);
+      -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; display: block; }
 
-      .glass {
-        backdrop-filter: blur(20px);
-        background: rgba(255, 255, 255, 0.75);
+    /* ── Typography Scale ── */
+    .t-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted-lt);
+    }
+    .t-display {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+    .t-heading {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
 
-        border: 1px solid rgba(255, 255, 255, 0.6);
-      }
+    /* ── Hero Section ── */
+    .hero {
+      position: relative;
+      background: var(--ink);
+      color: white;
+      overflow: hidden;
+      padding: 0;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(19, 83, 164, 0.55) 0%, transparent 60%, rgba(230, 57, 70, 0.08) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-      .card {
-        transition: 0.35s;
-      }
+    /* scan-line — signature animation */
+    .hero-scanline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(37, 99, 235, 0.6) 30%, rgba(230, 57, 70, 0.8) 50%, rgba(37, 99, 235, 0.6) 70%, transparent 100%);
+      animation: scandown 6s ease-in-out infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+    @keyframes scandown {
+      0%   { top: 0%; opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-scanline { animation: none; opacity: 0; }
+    }
 
-      .card:hover {
-        transform: translateY(-6px);
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 72px 48px 0;
+    }
+    .hero-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 48px;
+      align-items: start;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(37, 99, 235, 0.35);
+      border-radius: 100px;
+      padding: 6px 14px;
+      margin-bottom: 24px;
+    }
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--primary-lt);
+      box-shadow: 0 0 8px var(--primary-lt);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+    .hero-badge-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.65);
+    }
+    .hero-title {
+      font-size: clamp(32px, 4.5vw, 60px);
+      color: white;
+      max-width: 760px;
+    }
+    .hero-title em {
+      font-style: normal;
+      color: #93C5FD;
+    }
+    .hero-yearcard {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px);
+      border-radius: var(--r-lg);
+      padding: 28px 36px;
+      text-align: center;
+      flex-shrink: 0;
+      animation: float 5s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+    .hero-yearcard-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+    .hero-yearcard-value {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      color: white;
+      margin-top: 8px;
+      letter-spacing: -0.04em;
+    }
 
-        box-shadow: 0 30px 60px rgba(30, 64, 175, 0.12);
-      }
+    /* Stats bar */
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 56px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .hero-stat {
+      padding: 32px 40px;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .hero-stat:last-child { border-right: none; }
+    .hero-stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 10px;
+    }
+    .hero-stat-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 48px;
+      font-weight: 500;
+      color: white;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .hero-stat:first-child .hero-stat-value { color: #93C5FD; }
+    .hero-stat:nth-child(2) .hero-stat-value { color: var(--accent); }
 
-      .fade {
-        animation: fade 1s;
-      }
+    /* ── Page Body ── */
+    .page-body {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 80px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 96px;
+    }
 
-      @keyframes fade {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
+    /* ── Section header ── */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-size: clamp(28px, 3vw, 40px);
+      color: var(--ink);
+    }
+    .section-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(19, 83, 164, 0.09);
+      border: 1px solid rgba(19, 83, 164, 0.2);
+      border-radius: 100px;
+      padding: 6px 14px;
+    }
 
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+    /* ── Map Section ── */
+    .map-frame {
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      background: var(--panel);
+      box-shadow: var(--shadow-lift);
+      border: 1px solid var(--border);
+    }
+    .map-frame iframe {
+      display: block;
+      width: 100%;
+      height: 860px;
+      border: none;
+    }
 
-      .float {
-        animation: float 5s infinite;
-      }
+    /* ── Image Grid ── */
+    .img-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .img-card {
+      background: var(--panel);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border);
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .img-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lift);
+    }
+    .img-card-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .img-card-title::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 14px;
+      border-radius: 2px;
+      background: var(--primary);
+    }
+    .img-card img {
+      border-radius: var(--r-md);
+      width: 100%;
+      object-fit: cover;
+      transition: transform 0.4s;
+    }
+    .img-card:hover img { transform: scale(1.02); }
 
-      @keyframes float {
-        0% {
-          transform: translateY(0);
-        }
+    /* ── Priority Section ── */
+    .priority-intro { margin-bottom: 48px; }
+    .priority-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-        50% {
-          transform: translateY(-10px);
-        }
+    /* Audit Row */
+    .audit-row {
+      background: var(--panel);
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .audit-row:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lift);
+    }
+    .audit-rank {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      font-weight: 500;
+      color: white;
+    }
+    .audit-rank--1   { background: var(--accent); }
+    .audit-rank--top { background: #D97706; }
+    .audit-rank--mid { background: var(--primary); }
 
-        100% {
-          transform: translateY(0);
-        }
-      }
+    .audit-content {
+      padding: 22px 28px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+    .audit-region-name {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+    .audit-cluster-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(19, 83, 164, 0.07);
+      border: 1px solid rgba(19, 83, 164, 0.15);
+      border-radius: 100px;
+      padding: 4px 10px;
+      margin-top: 8px;
+    }
+    .audit-metric-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted-lt);
+      margin-bottom: 6px;
+    }
+    .audit-metric-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 30px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .audit-metric-value--risk     { color: var(--accent); }
+    .audit-metric-value--coverage { color: var(--primary-lt); }
 
-      .map-wrapper {
-        overflow: hidden;
+    .risk-bar-wrap {
+      margin-top: 8px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--accent);
+    }
 
-        border-radius: 32px;
+    .anomaly-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .anomaly-badge--warn { background: #FEE2E2; }
+    .anomaly-badge--ok   { background: var(--green-lt); }
+    .anomaly-badge svg { width: 22px; height: 22px; }
+    .anomaly-badge--warn svg { stroke: var(--accent); }
+    .anomaly-badge--ok svg   { stroke: var(--green); }
 
-        background: white;
+    /* ── Insights Section ── */
+    .insights-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .insights-header .t-eyebrow {
+      margin-bottom: 12px;
+      display: block;
+    }
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .insight-card {
+      background: var(--panel);
+      border-radius: var(--r-xl);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    .insight-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lift);
+    }
+    .insight-top-bar { height: 3px; }
+    .insight-top-bar--critical { background: var(--accent); }
+    .insight-top-bar--data     { background: var(--primary-lt); }
+    .insight-top-bar--action   { background: var(--green); }
 
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.12);
-      }
+    .insight-body {
+      padding: 36px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .insight-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .insight-icon--critical           { background: #FEE2E2; }
+    .insight-icon--critical svg       { stroke: var(--accent); }
+    .insight-icon--data               { background: rgba(37, 99, 235, 0.08); }
+    .insight-icon--data svg           { stroke: var(--primary-lt); }
+    .insight-icon--action             { background: var(--green-lt); }
+    .insight-icon--action svg         { stroke: var(--green); }
+    .insight-icon svg { width: 26px; height: 26px; }
 
-      iframe {
-        border: none;
+    .insight-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-top: 24px;
+      line-height: 1.25;
+    }
+    .insight-text {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+      flex: 1;
+    }
+    .insight-footer {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-lt);
+    }
+    .insight-footer svg { width: 14px; height: 14px; stroke: var(--muted-lt); }
 
-        background: transparent;
-      }
+    /* ── Utility ── */
+    .fade-in {
+      animation: fadein 0.9s both;
+    }
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-      img {
-        transition: 0.4s;
-      }
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .hero-inner    { padding: 56px 32px 0; }
+      .hero-stats    { grid-template-columns: repeat(2, 1fr); }
+      .hero-stat:nth-child(2) { border-right: none; }
+      .page-body     { padding: 60px 32px; gap: 72px; }
+      .img-grid      { grid-template-columns: 1fr; }
+      .insights-grid { grid-template-columns: 1fr 1fr; }
+      .audit-content { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .hero-top      { grid-template-columns: 1fr; }
+      .hero-yearcard { display: none; }
+      .hero-stats    { grid-template-columns: 1fr 1fr; }
+      .hero-stat-value { font-size: 36px; }
+      .page-body     { padding: 40px 20px; gap: 60px; }
+      .insights-grid { grid-template-columns: 1fr; }
+      .audit-content { grid-template-columns: 1fr 1fr; }
+      .audit-content > .audit-metric:last-of-type { display: none; }
+      .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+</head>
 
-      img:hover {
-        transform: scale(1.03);
-      }
-    </style>
-  </head>
+<body>
 
-  <body>
-    <!-- HERO -->
+  <!-- ════════════════════════════════════
+       HERO
+  ════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-scanline"></div>
 
-    <section
-      class="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-800 to-blue-500 text-white"
-    >
-      <div
-        class="absolute inset-0 opacity-20"
-        style="
-          background: radial-gradient(circle, white 1px, transparent 1px);
-          background-size: 40px 40px;
-        "
-      ></div>
+    <div class="hero-inner">
+      <div class="hero-top">
 
-      <div class="max-w-7xl mx-auto px-10 py-24 relative">
-        <div class="flex justify-between items-center">
-          <div>
-            <div class="text-blue-200 uppercase tracking-[0.3em] mb-4">
-              DATA LAKEHOUSE
-            </div>
-
-            <h1 class="text-6xl font-black leading-tight fade">
-              Sistem Audit Ketimpangan Distribusi Fasilitas Kesehatan Balita DKI
-              Jakarta
-            </h1>
-
-            <p class="mt-6 text-xl text-blue-100 max-w-3xl">
-              Nutrition Risk Score • Spatial Analytics • Audit Dashboard
-            </p>
+        <div class="fade-in">
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span class="hero-badge-text">Data Lakehouse · Live System</span>
           </div>
 
-          <div class="glass rounded-3xl p-8 float">
-            <div class="text-sm">Last Update</div>
+          <h1 class="t-display hero-title">
+            Audit Ketimpangan<br />
+            <em>Distribusi Fasilitas</em><br />
+            Kesehatan Balita DKI
+          </h1>
 
-            <div class="mt-2 text-3xl font-bold">2026</div>
-          </div>
+          <p class="t-eyebrow" style="color:rgba(255,255,255,0.4); margin-top:20px;">
+            Nutrition Risk Score &nbsp;·&nbsp; Spatial Analytics &nbsp;·&nbsp; Audit Dashboard
+          </p>
         </div>
 
-        <div class="grid grid-cols-4 gap-6 mt-14">
-          {% set items=[ ("Wilayah",summary.wilayah), ("Avg
-          Risk",summary.avg_risk), ("Posyandu",summary.posyandu),
-          ("Nakes",summary.nakes) ] %} {% for a,b in items %}
+        <div class="hero-yearcard">
+          <div class="hero-yearcard-label">Last Update</div>
+          <div class="hero-yearcard-value">2026</div>
+        </div>
 
-          <div class="glass card rounded-3xl p-7">
-            <div class="text-blue-200">{{a}}</div>
+      </div>
 
-            <div class="text-5xl font-black mt-2">{{b}}</div>
-          </div>
+      <!-- Stats bar -->
+      <div class="hero-stats">
+        {% set items = [
+          ("Wilayah",  summary.wilayah),
+          ("Avg Risk", summary.avg_risk),
+          ("Posyandu", summary.posyandu),
+          ("Nakes",    summary.nakes)
+        ] %}
+        {% for label, val in items %}
+        <div class="hero-stat">
+          <div class="hero-stat-label">{{ label }}</div>
+          <div class="hero-stat-value">{{ val }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 
-          {% endfor %}
+
+  <!-- ════════════════════════════════════
+       PAGE BODY
+  ════════════════════════════════════ -->
+  <main class="page-body">
+
+    <!-- ── 1. Interactive Spatial Audit ── -->
+    <section>
+      <div class="section-header">
+        <h2 class="t-heading section-title">Audit Interaktif</h2>
+        <span class="section-tag">Live Visualization</span>
+      </div>
+      <div class="map-frame">
+        <iframe src="/output/peta_interaktif.html" title="Peta Interaktif Audit Fasilitas Kesehatan"></iframe>
+      </div>
+    </section>
+
+
+    <!-- ── 2. Heatmap & Cluster ── -->
+    <section>
+      <div class="section-header">
+        <h2 class="t-heading section-title">Analisis Risiko Spasial</h2>
+      </div>
+      <div class="img-grid">
+        <div class="img-card">
+          <div class="img-card-title">Nutrition Risk Heatmap</div>
+          <img src="/output/peta_nrs.png" alt="Peta Nutrition Risk Score" />
+        </div>
+        <div class="img-card">
+          <div class="img-card-title">Cluster Distribution</div>
+          <img src="/output/peta_cluster.png" alt="Peta Cluster Distribusi" />
         </div>
       </div>
     </section>
 
-    <div class="max-w-7xl mx-auto px-8 space-y-20 py-16">
-      <section>
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-4xl font-black text-blue-950">
-            Interactive Spatial Audit
-          </h2>
 
-          <div class="px-5 py-2 rounded-full bg-blue-100">
-            Live Visualization
-          </div>
+    <!-- ── 3. Priority Regions ── -->
+    <section>
+      <div class="priority-intro">
+        <div class="section-header" style="margin-bottom:0;">
+          <h2 class="t-heading section-title">Wilayah Prioritas Intervensi</h2>
+          <span class="section-tag">{{ regions|length }} Wilayah</span>
         </div>
+      </div>
 
-        <div class="map-wrapper">
-          <iframe
-            src="/output/peta_interaktif.html"
-            class="w-full h-[900px]"
-          ></iframe>
-        </div>
-      </section>
-
-      <section>
-        <div class="grid grid-cols-2 gap-8">
-          <div class="card bg-white rounded-[32px] p-5 shadow-xl">
-            <div class="font-bold text-xl mb-5">Nutrition Risk Heatmap</div>
-
-            <img src="/output/peta_nrs.png" class="rounded-2xl" />
+      <div class="priority-list">
+        {% for x in regions %}
+        <div class="audit-row">
+          <div class="audit-rank
+            {% if x.priority_rank == 1 %}audit-rank--1
+            {% elif x.priority_rank <= 3 %}audit-rank--top
+            {% else %}audit-rank--mid{% endif %}">
+            {{ x.priority_rank }}
           </div>
-
-          <div class="card bg-white rounded-[32px] p-5 shadow-xl">
-            <div class="font-bold text-xl mb-5">Cluster Distribution</div>
-
-            <img src="/output/peta_cluster.png" class="rounded-2xl" />
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="mb-14">
-          <div class="uppercase tracking-[0.35em] text-blue-500">
-            AUDIT PRIORITY
-          </div>
-
-          <h2 class="text-5xl font-black mt-4">Wilayah Prioritas Intervensi</h2>
-        </div>
-
-        <div class="space-y-7">
-          {% for x in regions %}
-
-          <div
-            class="bg-white rounded-[34px] shadow-lg hover:shadow-2xl transition overflow-hidden"
-          >
-            <div class="grid grid-cols-12 items-center">
-              <div
-                class="col-span-1 h-full flex items-center justify-center text-white font-black text-3xl {% if x.priority_rank==1 %} bg-red-600 {% elif x.priority_rank<=3 %} bg-yellow-500 {% else %} bg-blue-700 {% endif %}"
-              >
-                {{x.priority_rank}}
-              </div>
-
-              <div class="col-span-4 px-8 py-8">
-                <div class="text-sm uppercase text-gray-400">Wilayah</div>
-
-                <div class="text-3xl font-black">{{x.kabupaten_kota}}</div>
-
-                <div
-                  class="mt-4 inline-flex gap-2 items-center px-4 py-2 rounded-full bg-blue-50"
-                >
-                  <i data-lucide="layers" class="w-4 h-4"></i>
-
-                  {{x.cluster_label}}
-                </div>
-              </div>
-
-              <div class="col-span-2">
-                <div class="text-gray-500">Risk Score</div>
-
-                <div class="text-5xl font-black">
-                  {{x.nutrition_risk_score}}
-                </div>
-              </div>
-
-              <div class="col-span-2">
-                <div class="text-gray-500">Coverage</div>
-
-                <div class="text-4xl font-bold text-blue-700">
-                  {{(x.nutrition_coverage_index*100)|round(0)}}%
-                </div>
-              </div>
-
-              <div class="col-span-2">
-                <div class="text-gray-500">Posyandu</div>
-
-                <div class="text-4xl font-bold">{{x.jumlah_posyandu}}</div>
-              </div>
-
-              <div class="col-span-1 flex justify-center">
-                {% if x.is_anomaly %}
-
-                <div
-                  class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center"
-                >
-                  <i
-                    data-lucide="triangle-alert"
-                    class="w-7 h-7 text-red-600"
-                  ></i>
-                </div>
-
-                {% else %}
-
-                <div
-                  class="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center"
-                >
-                  <i
-                    data-lucide="shield-check"
-                    class="w-7 h-7 text-green-600"
-                  ></i>
-                </div>
-
-                {% endif %}
+          <div class="audit-content">
+            <div>
+              <div class="audit-region-name">{{ x.kabupaten_kota }}</div>
+              <div class="audit-cluster-label">
+                <i data-lucide="layers" style="width:10px;height:10px;"></i>
+                {{ x.cluster_label }}
               </div>
             </div>
-          </div>
-
-          {% endfor %}
-        </div>
-      </section>
-
-      <section>
-        <div class="text-center mb-14">
-          <div class="uppercase tracking-[0.4em] text-blue-500">
-            AUDIT ENGINE
-          </div>
-
-          <h2 class="text-5xl font-black mt-4">Generated Strategic Insights</h2>
-        </div>
-
-        <div class="grid grid-cols-3 gap-8">
-          {% for i in insights %}
-
-          <div
-            class="bg-white rounded-[36px] shadow-xl hover:shadow-2xl hover:-translate-y-2 transition overflow-hidden"
-          >
-            <div
-              class="h-2 {% if loop.index==1 %} bg-red-500 {% elif loop.index==2 %} bg-blue-600 {% else %} bg-green-500 {% endif %}"
-            ></div>
-
-            <div class="p-10">
-              <div
-                class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center"
-              >
-                {% if loop.index==1 %}
-
-                <i data-lucide="scan-search" class="w-8 h-8 text-red-500"></i>
-
-                {% elif loop.index==2 %}
-
-                <i data-lucide="chart-column" class="w-8 h-8 text-blue-700"></i>
-
-                {% else %}
-
-                <i data-lucide="lightbulb" class="w-8 h-8 text-green-700"></i>
-
-                {% endif %}
-              </div>
-
-              <div class="mt-8 text-2xl font-black">{{i.title}}</div>
-
-              <div class="mt-5 leading-9 text-gray-600">{{i.body}}</div>
-
-              <div class="mt-10 flex items-center gap-2 text-sm text-gray-400">
-                <i data-lucide="brain" class="w-4 h-4"></i>
-
-                Generated Insight
+            <div class="audit-metric">
+              <div class="audit-metric-label">Risk Score</div>
+              <div class="audit-metric-value audit-metric-value--risk">{{ x.nutrition_risk_score }}</div>
+              <div class="risk-bar-wrap">
+                <div class="risk-bar-fill" style="width:{{ [x.nutrition_risk_score * 10, 100]|min }}%;"></div>
               </div>
             </div>
+            <div class="audit-metric">
+              <div class="audit-metric-label">Coverage</div>
+              <div class="audit-metric-value audit-metric-value--coverage">{{ (x.nutrition_coverage_index * 100)|round(0)|int }}%</div>
+            </div>
+            <div class="audit-metric">
+              <div class="audit-metric-label">Posyandu</div>
+              <div class="audit-metric-value">{{ x.jumlah_posyandu }}</div>
+            </div>
+            {% if x.is_anomaly %}
+            <div class="anomaly-badge anomaly-badge--warn">
+              <i data-lucide="triangle-alert"></i>
+            </div>
+            {% else %}
+            <div class="anomaly-badge anomaly-badge--ok">
+              <i data-lucide="shield-check"></i>
+            </div>
+            {% endif %}
           </div>
-
-          {% endfor %}
         </div>
-      </section>
-    </div>
-    <script>
-        lucide.createIcons();
-    </script>
-  </body>
+        {% endfor %}
+      </div>
+    </section>
+
+
+    <!-- ── 4. Strategic Insights ── -->
+    <section>
+      <div class="insights-header">
+        <h2 class="t-display" style="font-size:clamp(32px,4vw,48px); color:var(--ink); letter-spacing:-0.03em; margin-top:8px;">
+          Rencana Strategis & Rekomendasi Intervensi
+        </h2>
+      </div>
+
+      <div class="insights-grid">
+        {% for i in insights %}
+        {% set types = ['critical','data','action'] %}
+        {% set icons = ['scan-search','chart-column','lightbulb'] %}
+        {% set t = types[loop.index0 % 3] %}
+        {% set ic = icons[loop.index0 % 3] %}
+        <div class="insight-card">
+          <div class="insight-top-bar insight-top-bar--{{ t }}"></div>
+          <div class="insight-body">
+            <div class="insight-icon insight-icon--{{ t }}">
+              <i data-lucide="{{ ic }}"></i>
+            </div>
+            <div class="insight-title">{{ i.title }}</div>
+            <div class="insight-text">{{ i.body }}</div>
+            <div class="insight-footer">
+              <i data-lucide="arrow-right"></i>
+              Analysis by Kelompok 3
+              {{ i.footer }}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+  </main>
+
+  <script>lucide.createIcons();</script>
+</body>
 </html>

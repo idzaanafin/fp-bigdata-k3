@@ -757,11 +757,18 @@ Kepulauan Seribu konsisten terdeteksi sebagai anomali di semua nilai contaminati
 
 ## 6. Dashboard
 
-Setelah melakukan langkah-langkah pada [Command Documentation](#command-documentation), dashboard akan muncul pada `localhost:5000`.
-
 Dashboard menampilkan:
 - **Hero section** dengan summary statistik (jumlah wilayah, rata-rata risk score, total posyandu, total nakes)
 - **Peta interaktif Folium** (embedded iframe) dengan tooltip per wilayah
 - **Peta statis** choropleth NRS dan cluster distribution
 - **Ranking wilayah prioritas** intervensi dengan indikator visual (risk score, coverage %, posyandu count, anomaly flag)
 - **Strategic insights** yang di-generate dari data (prioritas intervensi, coverage tertinggi, audit distribusi)
+
+
+![Dashboard](documentation/dashboard.png)
+![Dashboard](documentation/dashboard1.png)
+![Dashboard](documentation/dashboard2.png)
+![Dashboard](documentation/dashboard3.png)
+![Dashboard](documentation/dashboard4.png)
+![Dashboard](documentation/dashboard5.png)
+![Dashboard](documentation/dashboard6.png)

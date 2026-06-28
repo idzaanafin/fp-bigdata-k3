@@ -676,7 +676,7 @@
               <div class="audit-metric-label">Risk Score</div>
               <div class="audit-metric-value audit-metric-value--risk">{{ x.nutrition_risk_score }}</div>
               <div class="risk-bar-wrap">
-                <div class="risk-bar-fill" style="width:{{ [x.nutrition_risk_score * 10, 100]|min }}%;"></div>
+                <div class="risk-bar-fill" style="width:{{ [x.nutrition_risk_score * 100, 100]|min }}%;"></div>
               </div>
             </div>
             <div class="audit-metric">
